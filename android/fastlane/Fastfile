@@ -1,0 +1,16 @@
+default_platform(:android)
+
+platform :android do
+  desc "Deploy a new internal build to Google Play"
+  lane :internal do
+    Dir.chdir "../.." do
+      sh("flutter", "packages", "get")
+      sh("flutter", "clean")
+      sh("flutter", "build", "appbundle", "--build-number=#{ENV["PROJECT_BUILD_NUMBER"]}", "--build-name=#{ENV["BUILD_NAME"]}")
+    end
+    upload_to_play_store(
+        track: 'internal',
+        aab: '../build/app/outputs/bundle/release/app-release.aab'
+    )
+  end
+end

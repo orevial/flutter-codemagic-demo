@@ -1,0 +1,55 @@
+workflows:
+  internal-deployment:
+    name: Internal deployment
+    max_build_duration: 90
+    environment:
+      vars:
+        BUILD_NAME: 1.2.3
+        GOOGLE_PLAY_STORE_JSON_BASE64: Encrypted(var)
+        ANDROID_KEYSTORE: Encrypted(var)
+        ANDROID_KEYSTORE_PASSWORD: Encrypted(var)
+        ANDROID_KEY_ALIAS: Encrypted(var)
+        ANDROID_KEY_PASSWORD: Encrypted(var)
+        IOS_APP_ID: com.company.somename
+        APPLE_DEVELOPER_TEAM_ID: 123ABCD456
+        FASTLANE_EMAIL: apple-technical@your-company.com
+        FASTLANE_PASSWORD: Encrypted(var)
+        MATCH_PASSWORD: Encrypted(var)
+        SSH_KEY_FOR_FASTLANE_MATCH_BASE64: Encrypted(var)
+        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: Encrypted(var)
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    cache:
+      cache_paths:
+        - $HOME/Library/Caches/CocoaPods
+        - $HOME/.gradle/caches
+        - $FLUTTER_ROOT/.pub-cache
+    triggering:
+      events:
+        - tag
+    scripts:
+      - name: Post clone setup for Android & iOS
+        script: |
+          #!/usr/bin/env sh
+            /bin/sh $FCI_BUILD_DIR/codemagic/post-clone.sh all
+      - name: Build & Deploy Android app
+        script: |
+          cd $FCI_BUILD_DIR/android
+
+          bundle exec fastlane supply init --track internal --package_name com.company.somename
+      - name: Build & Deploy iOS app
+        script: |
+          cd $FCI_BUILD_DIR/ios
+
+          bundle exec fastlane ios beta
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      slack:
+        channel: '#flutter-codemagic-demo'
+        notify_on_build_start: false

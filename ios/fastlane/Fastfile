@@ -1,0 +1,77 @@
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+      # Create a local keychain that will later store iOS profiles and certificates
+      if is_ci?
+          puts "This is CI run. Setting custom keychain."
+          create_keychain(
+              name: 'Temp.codemagic_keychain',
+              password: 'Temp.codemagic_keychain_password',
+              default_keychain: true,
+              unlock: true,
+              timeout: 3600,
+          )
+      end
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Synchronize profiles & certificates from Git repo using Match
+    match(
+        type: "appstore",
+        readonly: is_ci,
+        keychain_name: 'Temp.codemagic_keychain',
+        keychain_password: 'Temp.codemagic_keychain_password'
+    )
+    # Disable automatic code signing as we will use custom signing method later on
+    update_code_signing_settings(
+      use_automatic_signing: false
+    )
+    # Update Xcode provisioning profile with the one we got from Git repo using Match
+    update_project_provisioning(
+      # https://github.com/fastlane/fastlane/issues/15926
+      profile: ENV["sigh_#{ENV["IOS_APP_ID"]}_appstore_profile-path"],
+      build_configuration: "Release",
+      code_signing_identity: "iPhone Distribution",
+      xcodeproj: "Runner.xcodeproj",
+    )
+    # Replace version number with Codemagic build number
+    set_info_plist_value(
+      path: "Runner/Info.plist",
+      key: "CFBundleVersion",
+      value: ENV["PROJECT_BUILD_NUMBER"]
+    )
+    # Replace version name with our semver version
+    set_info_plist_value(
+      path: "Runner/Info.plist",
+      key: "CFBundleShortVersionString",
+      value: ENV["BUILD_NAME"]
+    )
+    # Run a first Flutter build with code signing disabled
+    Dir.chdir "../.." do
+      sh("flutter", "packages", "get")
+      sh("flutter", "clean")
+      sh("flutter", "build", "ios", "--release", "--no-codesign")
+    end
+    # Run a second Flutter build with custom code signing
+    build_app(
+        workspace: "Runner.xcworkspace",
+        scheme: "Runner",
+        configuration: "Release",
+        xcargs: "-allowProvisioningUpdates",
+        export_options: {
+            signingStyle: "manual",
+            method: "app-store",
+            provisioningProfiles: {
+                "#{ENV["IOS_APP_ID"]}": "match AppStore #{ENV["IOS_APP_ID"]}"
+            }
+        },
+    )
+    # Upload our build to TestFlight (Beta track)
+    upload_to_testflight(
+        skip_waiting_for_build_processing: true,
+        apple_id: "123456789"
+    )
+  end
+end

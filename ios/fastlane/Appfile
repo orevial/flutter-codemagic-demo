@@ -1,0 +1,5 @@
+app_identifier("com.company.awesomeApp") # The bundle identifier of your app
+apple_id("apple-technical@your-company.com") # Your Apple email address for the technical account
+
+team_id("123ABC1DE") # Developer Portal Team ID
+itc_team_id("123456789") # App Store Connect Team ID
