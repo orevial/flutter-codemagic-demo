@@ -1,16 +1,9 @@
-# awesomeApp
+# Flutter & Codemagic demo
 
-A new Flutter project.
+This simple Flutter repository aims at showing how to implement an automated CI/CD to deploy a Flutter app to both Android and iOS stores as described in this [step-by-step article](https://dev.to/stack-labs/flutter-a-wonderful-journey-to-ci-with-codemagic-and-fastlane-pj5).
 
-## Getting Started
+You should in particular look at the commit named `feat(*): add Codemagic CI/CD` to see which files you should add in your project !
 
-This project is a starting point for a Flutter application.
+But don't forget to read the [step-by-step article](https://dev.to/stack-labs/flutter-a-wonderful-journey-to-ci-with-codemagic-and-fastlane-pj5) to learn what the hell all these files are about 😀
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Made with ❤️, hope you like it.
